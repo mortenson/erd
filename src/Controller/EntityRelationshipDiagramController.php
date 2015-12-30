@@ -14,7 +14,6 @@ use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
  * Contains the primary entity relationship diagram for this module.
@@ -105,7 +104,17 @@ class EntityRelationshipDiagramController extends ControllerBase {
       $entities[] = $entity;
     }
 
-    return new JsonResponse($entities);
+    return [
+      '#markup' => '<div id="erd-container"></div>',
+      '#attached' => [
+        'library' => ['erd/main'],
+        'drupalSettings' => [
+          'erd' => [
+            'entities' => $entities
+          ],
+        ]
+      ]
+    ];
   }
 
 }
