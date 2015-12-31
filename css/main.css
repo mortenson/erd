@@ -1,0 +1,41 @@
+.erd-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.erd-type-list {
+  margin: 0 auto;
+}
+
+.erd-item {
+  display: inline-block;
+  cursor: default;
+  position: relative;
+  padding: 10px;
+  margin: 1px;
+  background: #618eda;
+  color: #e7f0e9;
+}
+
+.erd-type-item {
+  cursor: pointer;
+  width: 30%;
+}
+
+.erd-bundle-item {
+  background: #e7f0e9;
+  display: block;
+  margin: 0;
+  border: 1px solid #618eda;
+  color: #618eda;
+}
+
+.erd-bundle-list {
+  display: none;
+  z-index: 1;
+}
+
+#erd-container svg {
+  border: 1px solid black;
+}

@@ -62,6 +62,7 @@ class EntityRelationshipDiagramController extends ControllerBase {
   public function getMainDiagram() {
     $entity_definitions = $this->entityTypeManager->getDefinitions();
     $entities = [];
+
     foreach ($entity_definitions as $definition) {
       $entity = [
         'label' => $definition->getLabel(),
@@ -87,7 +88,7 @@ class EntityRelationshipDiagramController extends ControllerBase {
           $fields = $this->entityFieldManager->getFieldDefinitions($definition->id(), $bundle_id);
           foreach ($fields as $field) {
             $field_storage_definition = $field->getFieldStorageDefinition();
-            $bundle['fields'][] = [
+            $bundle['fields'][$field_storage_definition->getName()] = [
               'name' => $field_storage_definition->getName(),
               'label' => $field_storage_definition->getLabel(),
               'type' => $field_storage_definition->getType(),
@@ -98,10 +99,10 @@ class EntityRelationshipDiagramController extends ControllerBase {
           }
         }
 
-        $entity['bundles'][] = $bundle;
+        $entity['bundles'][$bundle_id] = $bundle;
       }
 
-      $entities[] = $entity;
+      $entities[$definition->id()] = $entity;
     }
 
     return [

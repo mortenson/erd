@@ -4,8 +4,7 @@
 
   Drupal.behaviors.erd = {
     attach: function (context, settings) {
-      var width = 700;
-      var height = 600;
+      // Set up our initial SVG and JointJS settings.
 
       var erd = joint.shapes.erd;
 
@@ -13,17 +12,17 @@
 
       var paper = new joint.dia.Paper({
         el: document.getElementById('erd-container'),
-        width: width,
-        height: height,
+        width: '100%',
+        height: '100%',
         gridSize: 1,
         model: graph,
         linkPinning: false,
         linkConnectionPoint: joint.util.shapePerimeterConnectionPoint
       });
 
-      // Create shapes
+      // Create default shapes.
 
-      var entity = new erd.Entity({
+      var entity_type = new erd.Entity({
         position: { x: 100, y: 200 },
         attrs: {
           text: {
@@ -40,13 +39,43 @@
         }
       });
 
-      var cells = [];
+      //var cells = [];
+      //cells.push(entity_type.clone().translate(0, 200).attr('text/text', settings.erd.entities[0].label));
+      //graph.addCells(cells);
 
+      // For each entity type and bundle, create an add/remove button.
+      var entity_list = $('<ul></ul>');
+      entity_list.addClass('erd-list erd-type-list');
       for (var i in settings.erd.entities) {
-        cells.push(entity.clone().translate(0, 200).attr('text/text', settings.erd.entities[i].label));
+        var entity_item = $('<li></li>');
+        entity_item.data('entity-type-id', settings.erd.entities[i].id);
+        entity_item.addClass('erd-item erd-type-item');
+        entity_item.html('<a class="expand">^</a><span class="label">' + settings.erd.entities[i].label + '</span>');
+
+        var bundle_list = $('<ul></ul>');
+        bundle_list.addClass('erd-list erd-bundle-list');
+        for (var j in settings.erd.entities[i].bundles) {
+          var bundle_item = $('<li></li>');
+          bundle_item.data('entity-bundle-name', settings.erd.entities[i].bundles[j].name);
+          bundle_item.addClass('erd-item erd-bundle-item');
+          bundle_item.html(settings.erd.entities[i].bundles[j].label);
+          bundle_list.append(bundle_item);
+        }
+
+        if (bundle_list.length > 0) {
+          entity_item.append(bundle_list);
+        }
+
+        entity_list.append(entity_item);
       }
 
-      graph.addCells(cells);
+      $('#erd-container').append(entity_list);
+
+      // Set up events for adding types to the SVG.
+
+      $('.erd-type-item').click(function() {
+        $(this).find('.erd-bundle-list').toggle();
+      });
     }
   };
 
