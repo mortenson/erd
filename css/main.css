@@ -18,22 +18,67 @@
   color: #e7f0e9;
 }
 
-.erd-type-item {
+.erd-item .actions {
+  float: right;
+}
+
+.erd-item .addremove:after {
+  content: "Add";
+}
+
+.erd-item.added .addremove:after {
+  content: "Remove";
+}
+
+.erd-type-item .expand:after {
+  content: "Show Bundles";
+}
+
+.erd-type-item.expanded .expand:after {
+  content: "Hide Bundles";
+}
+
+.erd-item a {
+  color: #e7f0e9;
   cursor: pointer;
-  width: 30%;
+  margin-right: 10px;
+}
+
+.erd-item a:last-child {
+  margin-right: 0;
+}
+
+.erd-bundle-item a {
+  color: #618eda;
+}
+
+.erd-type-item {
+  width: 400px;
+}
+
+.erd-type-item.expanded {
 }
 
 .erd-bundle-item {
   background: #e7f0e9;
   display: block;
-  margin: 0;
+  margin: 5px;
   border: 1px solid #618eda;
   color: #618eda;
 }
 
 .erd-bundle-list {
   display: none;
+  background: rgba(97, 142, 218, 0.80);
   z-index: 1;
+  position: absolute;
+  width: 100%;
+  left: 0;
+  top: 100%;
+}
+
+.erd-type-item.expanded .erd-bundle-list {
+  display: block;
 }
 
 #erd-container svg {

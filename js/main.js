@@ -10,10 +10,10 @@
 
       var graph = new joint.dia.Graph();
 
-      var paper = new joint.dia.Paper({
+      new joint.dia.Paper({
         el: document.getElementById('erd-container'),
         width: '100%',
-        height: '100%',
+        height: 500,
         gridSize: 1,
         model: graph,
         linkPinning: false,
@@ -23,11 +23,12 @@
       // Create default shapes.
 
       var entity_type = new erd.Entity({
-        position: { x: 100, y: 200 },
+        markup: '<g class="rotatable"><g class="scalable"><polygon class="outer"/><polygon class="inner"/></g><text class="label"/></g>',
+        position: { x: 0, y: 0 },
         attrs: {
-          text: {
+          '.label': {
             fill: '#ffffff',
-            text: 'Entity Type',
+            text: '',
             'letter-spacing': 0,
             style: { 'text-shadow': '1px 0 1px #333333' }
           },
@@ -39,10 +40,6 @@
         }
       });
 
-      //var cells = [];
-      //cells.push(entity_type.clone().translate(0, 200).attr('text/text', settings.erd.entities[0].label));
-      //graph.addCells(cells);
-
       // For each entity type and bundle, create an add/remove button.
       var entity_list = $('<ul></ul>');
       entity_list.addClass('erd-list erd-type-list');
@@ -50,7 +47,7 @@
         var entity_item = $('<li></li>');
         entity_item.data('entity-type-id', settings.erd.entities[i].id);
         entity_item.addClass('erd-item erd-type-item');
-        entity_item.html('<a class="expand">^</a><span class="label">' + settings.erd.entities[i].label + '</span>');
+        entity_item.html('<span class="label">' + settings.erd.entities[i].label + '</span><div class="actions"><a class="expand"></a><a class="addremove"></a></div>');
 
         var bundle_list = $('<ul></ul>');
         bundle_list.addClass('erd-list erd-bundle-list');
@@ -58,7 +55,7 @@
           var bundle_item = $('<li></li>');
           bundle_item.data('entity-bundle-name', settings.erd.entities[i].bundles[j].name);
           bundle_item.addClass('erd-item erd-bundle-item');
-          bundle_item.html(settings.erd.entities[i].bundles[j].label);
+          bundle_item.html('<span class="label">' + settings.erd.entities[i].bundles[j].label + '</span><div class="actions"><a class="addremove"></a></div>');
           bundle_list.append(bundle_item);
         }
 
@@ -71,10 +68,24 @@
 
       $('#erd-container').append(entity_list);
 
-      // Set up events for adding types to the SVG.
+      // Set up events for adding types/bundles to the SVG.
 
-      $('.erd-type-item').click(function() {
-        $(this).find('.erd-bundle-list').toggle();
+      $('.erd-type-item .expand').click(function() {
+        $(this).closest('.erd-type-item').toggleClass('expanded');
+      });
+
+      $('.erd-type-item .addremove').click(function() {
+        var $element = $(this).closest('.erd-type-item');
+        var id = $element.data('entity-type-id');
+        if ($element.hasClass('added')) {
+          graph.get('cells').findWhere({ identifier: id }).remove();
+        }
+        else {
+          var cell = entity_type.clone().translate(0, 200).attr('.label/text', settings.erd.entities[id].label);
+          cell.set({identifier: id}, { silent: true });
+          graph.addCell(cell);
+        }
+        $element.toggleClass('added');
       });
     }
   };
