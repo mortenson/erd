@@ -22,11 +22,11 @@
   float: right;
 }
 
-.erd-item .addremove:after {
+.erd-item > .actions > .addremove:after {
   content: "Add";
 }
 
-.erd-item.added .addremove:after {
+.erd-item.added > .actions > .addremove:after {
   content: "Remove";
 }
 

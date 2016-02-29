@@ -9,6 +9,7 @@ main:
     - core/jquery
     - core/drupal
     - erd/joint
+    - erd/svg.pan.zoom
 
 joint:
   remote: http://jointjs.com/
@@ -36,3 +37,13 @@ lodash:
     gpl-compatible: true
   js:
     //cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.1/lodash.min.js: { type: external }
+
+svg.pan.zoom:
+  remote: https://github.com/ariutta/svg-pan-zoom
+  version: 3.2.6
+  license:
+    name: 'MIT'
+    url: https://github.com/ariutta/svg-pan-zoom/blob/3.2.6/LICENSE
+    gpl-compatible: true
+  js:
+    //cdn.rawgit.com/ariutta/svg-pan-zoom/3.2.6/dist/svg-pan-zoom.min.js: { type: external }
