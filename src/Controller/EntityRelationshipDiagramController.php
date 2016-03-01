@@ -106,6 +106,7 @@ class EntityRelationshipDiagramController extends ControllerBase {
               $link = [
                 'label' => 'Entity Reference from "field ' . $field_name . '"',
                 'from' => 'bundle:' . $bundle_id,
+                'from_selector' => '.attribute-background-' . $field_name,
                 'targets' => ['type:' . $field_settings['target_type']],
               ];
 

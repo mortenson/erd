@@ -149,7 +149,7 @@
             for (var field_name in bundle.fields) {
               field = bundle.fields[field_name];
               text_class = 'attribute-' + field_name;
-              background_class = 'attribute-background' + field_name;
+              background_class = 'attribute-background-' + field_name;
               background_y = cell.attr('.attribute-background/ref-y') + (i * 20);
               text_y = cell.attr('.attribute/ref-y') + (i * 20);
 
@@ -176,10 +176,13 @@
         $element.toggleClass('added');
       });
 
-      function createLink(elm1, elm2, label) {
+      function createLink(source, target, label) {
         var link = new erd.Line({
-          source: { id: elm1.id },
-          target: { id: elm2.id }
+          source: source,
+          target: target,
+          attrs: {
+            '.marker-target': { fill: '#000000', stroke: '#000000', d: 'M 10 0 L 0 5 L 10 10 z' }
+          }
         });
 
         link.addTo(graph).set('labels', [{
@@ -200,7 +203,7 @@
             for (var j in link.targets) {
               var to = graph.get('cells').findWhere({ identifier: link.targets[j] });
               if (to && from !== to) {
-                createLink(from, to, link.label);
+                createLink({id: from.id, selector: link.from_selector}, {id: to.id}, link.label);
               }
             }
           }
