@@ -10,10 +10,10 @@
 
       var graph = new joint.dia.Graph();
 
-      var paper_el = $('#erd-container');
+      var $paper_el = $('#erd-container');
 
       var paper = new joint.dia.Paper({
-        el: paper_el,
+        el: $paper_el,
         width: '100%',
         height: 500,
         gridSize: 1,
@@ -22,9 +22,9 @@
         linkConnectionPoint: joint.util.shapePerimeterConnectionPoint
       });
 
-      var panAndZoom = svgPanZoom(paper_el[0].childNodes[0],
+      var panAndZoom = svgPanZoom($paper_el[0].childNodes[0],
         {
-          viewportSelector: paper_el[0].childNodes[0].childNodes[0],
+          viewportSelector: $paper_el[0].childNodes[0].childNodes[0],
           fit: false,
           zoomScaleSensitivity: 0.1,
           controlIconsEnabled: true,
@@ -43,17 +43,10 @@
       // Create default shapes.
 
       var entity_bundle = new erd.Entity({
-        markup:
-          '<g class="rotatable">' +
-          '  <g class="scalable">' +
-          '    <polygon class="outer"/>' +
-          '    <polygon class="inner"/>' +
-          '  </g>' +
-          '  <text class="label"/>' +
-          '</g>',
-        position: { x: 0, y: 0 },
+        markup: '<g class="rotatable"><g class="scalable"><polygon class="outer"/><polygon class="inner"/></g><text/><text class="label"/></g>',
         attrs: {
           text: {
+            text: '',
             fill: '#ffffff',
             'letter-spacing': 0,
             style: { 'text-shadow': '1px 0 1px #333333' }
@@ -110,7 +103,7 @@
         entity_list.append(entity_item);
       }
 
-      paper_el.append(entity_list);
+      $paper_el.append(entity_list);
 
       // Set up events for adding types/bundles to the SVG.
 
@@ -122,13 +115,17 @@
         var $element = $(this).closest('.erd-type-item');
         var type_id = $element.data('entity-type-id');
         if ($element.hasClass('added')) {
-          graph.get('cells').findWhere({ identifier: type_id }).remove();
+          graph.get('cells').findWhere({ identifier: 'type:' + type_id }).remove();
         }
         else {
           var cell = entity_type.clone().translate(0, 200).attr('.label/text', settings.erd.entities[type_id].label);
-          cell.set({identifier: type_id}, { silent: true });
+          cell.set({identifier: 'type:' + type_id}, { silent: true });
           graph.addCell(cell);
         }
+
+        // Refresh all links on screen.
+        refreshLinks();
+
         $element.toggleClass('added');
       });
 
@@ -137,17 +134,15 @@
         var type_id = $element.closest('.erd-type-item').data('entity-type-id');
         var bundle_id = $element.data('entity-bundle-id');
         if ($element.hasClass('added')) {
-          graph.get('cells').findWhere({ identifier: bundle_id }).remove();
+          graph.get('cells').findWhere({ identifier: 'bundle:' + bundle_id }).remove();
         }
         else {
           var bundle = settings.erd.entities[type_id].bundles[bundle_id];
           var cell = entity_bundle.clone().translate(0, 200).attr('.label/text', bundle.label);
-          cell.set({identifier: bundle_id}, { silent: true });
+          cell.set({identifier: 'bundle:' + bundle_id}, { silent: true });
           var markup = cell.get('markup');
 
-          var text = '';
-          var polygons = '';
-          // Assemble replacement elements.
+          // Add elements to our markup.
           if (bundle.fields) {
             var field, text_class, background_class, background_y, text_y;
             var i = 0;
@@ -172,9 +167,45 @@
           cell.set({markup: markup});
 
           graph.addCell(cell);
+
         }
+
+        // Refresh all links on screen.
+        refreshLinks();
+
         $element.toggleClass('added');
       });
+
+      function createLink(elm1, elm2, label) {
+        var link = new erd.Line({
+          source: { id: elm1.id },
+          target: { id: elm2.id }
+        });
+
+        link.addTo(graph).set('labels', [{
+          position: 0.5,
+          attrs: {
+            text: {text: label, fill: '#f6f6f6', 'font-family': 'sans-serif', 'font-size': 10, style: { 'text-shadow': '1px 0 1px #333333' }},
+            rect: { stroke: '#618eda', 'stroke-width': 20, rx: 5, ry: 5 } }
+        }]);
+      }
+
+      // Builds and refreshs links for all on-screen elements.
+      function refreshLinks() {
+        for (var i in drupalSettings.erd.links) {
+          var link = drupalSettings.erd.links[i];
+          var from = graph.get('cells').findWhere({ identifier: link.from });
+          // This may not be on-screen.
+          if (from) {
+            for (var j in link.targets) {
+              var to = graph.get('cells').findWhere({ identifier: link.targets[j] });
+              if (to && from !== to) {
+                createLink(from, to, link.label);
+              }
+            }
+          }
+        }
+      }
     }
   };
 

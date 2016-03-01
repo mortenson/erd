@@ -62,8 +62,12 @@ class EntityRelationshipDiagramController extends ControllerBase {
   public function getMainDiagram() {
     $entity_definitions = $this->entityTypeManager->getDefinitions();
     $entities = [];
+    $links = [];
 
     foreach ($entity_definitions as $definition) {
+      // Links are stored as an abstracted array gluing together different types
+      // and bundles.
+
       $entity = [
         'label' => $definition->getLabel(),
         'id' => $definition->id(),
@@ -88,14 +92,31 @@ class EntityRelationshipDiagramController extends ControllerBase {
           $fields = $this->entityFieldManager->getFieldDefinitions($definition->id(), $bundle_id);
           foreach ($fields as $field) {
             $field_storage_definition = $field->getFieldStorageDefinition();
-            $bundle['fields'][$field_storage_definition->getName()] = [
-              'name' => $field_storage_definition->getName(),
+            $field_name = $field_storage_definition->getName();
+            $bundle['fields'][$field_name] = [
+              'name' => $field_name,
               'label' => $field_storage_definition->getLabel(),
               'type' => $field_storage_definition->getType(),
               'description' => $field_storage_definition->getDescription(),
               'cardinality' => $field_storage_definition->getCardinality(),
-              'is_multiple' => $field_storage_definition->isMultiple()
+              'is_multiple' => $field_storage_definition->isMultiple(),
             ];
+            $field_settings = $field->getItemDefinition()->getSettings();
+            if ($bundle['fields'][$field_name]['type'] == 'entity_reference') {
+              $link = [
+                'label' => 'Entity Reference from "field ' . $field_name . '"',
+                'from' => 'bundle:' . $bundle_id,
+                'targets' => ['type:' . $field_settings['target_type']],
+              ];
+
+              if (isset($field_settings['handler_settings']['target_bundles'])) {
+                foreach ($field_settings['handler_settings']['target_bundles'] as $target_bundle) {
+                  $link['targets'][] = 'bundle:' . $target_bundle;
+                }
+              }
+
+              $links[] = $link;
+            }
           }
         }
 
@@ -111,10 +132,11 @@ class EntityRelationshipDiagramController extends ControllerBase {
         'library' => ['erd/main'],
         'drupalSettings' => [
           'erd' => [
-            'entities' => $entities
+            'entities' => $entities,
+            'links' => $links,
           ],
-        ]
-      ]
+        ],
+      ],
     ];
   }
 
