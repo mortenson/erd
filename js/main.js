@@ -39,6 +39,10 @@
     entity_type.attr('.outer, .inner, .attribute-background/fill', '#C46A2D');
     entity_type.attr('.outer, .inner, .attribute-background/stroke', '#C46A2D');
 
+    var entity_label = entity_bundle.clone();
+    entity_label.attr('.outer, .inner, .attribute-background/fill', '#53C42D');
+    entity_label.attr('.outer, .inner, .attribute-background/stroke', '#53C42D');
+
     initAutocomplete();
 
     $('.erd-label').click(function () {
@@ -48,6 +52,14 @@
     $(this).on('click', '.remove-entity', function () {
       var model_id = $(this).closest('[model-id]').attr('model-id');
       graph.get('cells').get(model_id).remove();
+    });
+
+    $(this).on('click', '.erd-label .label', function () {
+      var model_id = $(this).closest('[model-id]').attr('model-id');
+      var text = prompt('Please enter new label text');
+      if (text && text.length > 0) {
+        graph.get('cells').get(model_id).attr('.label/text', text);
+      }
     });
 
     function initAutocomplete () {
@@ -161,8 +173,11 @@
       });
     }
 
-    function addLabel (text) {
-      var cell = entity_type.clone().translate(0, 0).attr('.label/text', text);
+    function addLabel () {
+      var cell = entity_label.clone().translate(0, 0).attr('.label/text', 'Change me');
+      var markup = cell.get('markup');
+      markup = '<g class="erd-label">' + markup + '</g>';
+      cell.set('markup', markup);
       graph.addCell(cell);
     }
 
