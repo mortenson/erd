@@ -74,3 +74,16 @@
   font-weight: bold;
   border-bottom: 1px solid #a8a8a8;
 }
+
+.erd-container .element.erd:hover .remove-entity {
+  display: inherit;
+}
+
+.erd-container .remove-entity {
+  display: none;
+  cursor: pointer;
+}
+
+.erd-container .remove-entity:hover svg {
+  fill: white;
+}

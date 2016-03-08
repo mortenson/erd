@@ -8,135 +8,159 @@
     }
   };
 
-  function erdInit (settings) {
-    var erd = joint.shapes.erd;
-
-    var graph = new joint.dia.Graph();
-
-    var $paper_el = $('.erd-container');
-
-    var paper = new joint.dia.Paper({
-      el: $paper_el,
-      width: '100%',
-      height: 500,
-      gridSize: 1,
-      model: graph,
-      linkPinning: false,
-      linkConnectionPoint: joint.util.shapePerimeterConnectionPoint
-    });
-
-    var panAndZoom = svgPanZoom($paper_el[0].childNodes[0],
-      {
-        viewportSelector: $paper_el[0].childNodes[0].childNodes[0],
-        fit: false,
-        zoomScaleSensitivity: 0.1,
-        controlIconsEnabled: true,
-        mouseWheelZoomEnabled: false,
-        panEnabled: false
-      });
-
-    paper.on('blank:pointerdown', function (evt, x, y) {
-      panAndZoom.enablePan();
-    });
-
-    paper.on('cell:pointerup blank:pointerup', function(cellView, event) {
-      panAndZoom.disablePan();
-    });
-
-    // Create default shapes.
-
-    var entity_bundle = new erd.Entity({
-      markup: '<g class="rotatable"><g class="scalable"><polygon class="outer"/><polygon class="inner"/></g><text/><text class="label"/></g>',
-      attrs: {
-        text: {
-          text: '',
-          fill: '#ffffff',
-          'letter-spacing': 0,
-          style: { 'text-shadow': '1px 0 1px #333333' }
-        },
-        '.label': {
-          text: ''
-        },
-        '.outer, .inner, .attribute-background': {
-          fill: '#2AA8A0', stroke: '#2AA8A0', 'stroke-width': 2,
-          points: '100,0 100,60 0,60 0,0',
-          filter: { name: 'dropShadow',  args: { dx: 0.5, dy: 2, blur: 2, color: '#333333' }}
-        },
-        '.attribute': {
-          text: '',
-          'font-size': 12,
-          ref: '.outer', 'ref-x': .5, 'ref-y': 65,
-          'x-alignment': 'middle', 'y-alignment': 'middle'
-        },
-        '.attribute-background': {
-          fill: '#31d0c6', stroke: '#289E97',
-          points: '150,0 150,20 0,20 0,0',
-          ref: '.outer', 'ref-x': 0, 'ref-y': 60
+  $.widget('custom.erdautocomplete', $.ui.autocomplete, {
+    _create: function () {
+      this._super();
+      this.widget().menu('option', 'items', '> :not(.erd-autocomplete-category)');
+    },
+    _renderMenu: function (ul, items) {
+      var that = this,
+        current_category = '';
+      $.each( items, function (index, item) {
+        var li;
+        if (item.data.type_label != current_category) {
+          ul.append("<li class='erd-autocomplete-category'>" + item.data.type_label + 's</li>');
+          current_category = item.data.type_label;
         }
-      }
-    });
+        li = that._renderItemData(ul, item);
+        if (item.data.type_label) {
+          li.attr('aria-label', item.data.type_label + 's : ' + item.data.label );
+        }
+      });
+    }
+  });
+
+  function erdInit (settings) {
+    var graph = createGraph(this);
+
+    var entity_bundle = getDefaultJointEntity();
 
     var entity_type = entity_bundle.clone();
-    entity_type.attr('.outer, .inner, .attribute-background/fill', '#C46A2D')
+    entity_type.attr('.outer, .inner, .attribute-background/fill', '#C46A2D');
     entity_type.attr('.outer, .inner, .attribute-background/stroke', '#C46A2D');
 
-    var source_types = [];
-    var source_bundles = [];
+    initAutocomplete();
 
-    for (var i in settings.erd.entities) {
-      source_types.push({
-        value: settings.erd.entities[i].label,
-        data: settings.erd.entities[i]
-      });
-      for (var j in settings.erd.entities[i].bundles) {
-        source_bundles.push({
-          value: settings.erd.entities[i].bundles[j].label,
-          data: settings.erd.entities[i].bundles[j]
+    function initAutocomplete () {
+      var source_types = [];
+      var source_bundles = [];
+
+      for (var i in settings.erd.entities) {
+        source_types.push({
+          value: settings.erd.entities[i].label,
+          data: settings.erd.entities[i]
         });
+        for (var j in settings.erd.entities[i].bundles) {
+          source_bundles.push({
+            value: settings.erd.entities[i].bundles[j].label,
+            data: settings.erd.entities[i].bundles[j]
+          });
+        }
       }
+
+      var source = $.merge(source_types, source_bundles);
+
+      $('.erd-search input').erdautocomplete({
+        source: source,
+        select: function (suggestion, ui) {
+          $('.erd-search input').attr('value', '');
+          if (ui.item.data.type == 'type') {
+            addType(ui.item.data);
+          }
+          else {
+            addBundle(ui.item.data);
+          }
+
+          $('.remove-entity').click(function () {
+            var model_id = $(this).closest('[model-id]').attr('model-id');
+            graph.get('cells').get(model_id).remove();
+          });
+        }
+      });
     }
 
-    var source = $.merge(source_types, source_bundles);
+    function createGraph (element) {
+      var graph = new joint.dia.Graph();
 
-    $.widget('custom.erdautocomplete', $.ui.autocomplete, {
-      _create: function () {
-        this._super();
-        this.widget().menu('option', 'items', '> :not(.erd-autocomplete-category)');
-      },
-      _renderMenu: function (ul, items) {
-        var that = this,
-          current_category = '';
-        $.each( items, function (index, item) {
-          var li;
-          if (item.data.type_label != current_category) {
-            ul.append("<li class='erd-autocomplete-category'>" + item.data.type_label + 's</li>');
-            current_category = item.data.type_label;
-          }
-          li = that._renderItemData(ul, item);
-          if (item.data.type_label) {
-            li.attr('aria-label', item.data.type_label + 's : ' + item.data.label );
-          }
+      var $paper_el = $(element);
+
+      var paper = new joint.dia.Paper({
+        el: $paper_el,
+        width: '100%',
+        height: 650,
+        gridSize: 1,
+        model: graph,
+        linkPinning: false,
+        linkConnectionPoint: joint.util.shapePerimeterConnectionPoint
+      });
+
+      var panAndZoom = svgPanZoom($paper_el[0].childNodes[0],
+        {
+          viewportSelector: $paper_el[0].childNodes[0].childNodes[0],
+          fit: false,
+          zoomScaleSensitivity: 0.1,
+          mouseWheelZoomEnabled: false,
+          panEnabled: false
         });
-      }
-    });
 
-    $('.erd-search input').erdautocomplete({
-      source: source,
-      select: function (suggestion, ui) {
-        $('.erd-search input').attr('value', '');
-        if (ui.item.data.type == 'type') {
-          addType(ui.item.data);
+      paper.on('blank:pointerdown', function (evt, x, y) {
+        panAndZoom.enablePan();
+      });
+
+      paper.on('cell:pointerup blank:pointerup', function(cellView, event) {
+        panAndZoom.disablePan();
+      });
+
+      $('.erd-zoom').click(function () {
+        panAndZoom.zoomIn();
+      });
+
+      $('.erd-unzoom').click(function () {
+        panAndZoom.zoomOut();
+      });
+
+      return graph;
+    }
+
+    function getDefaultJointEntity () {
+      return new joint.shapes.erd.Entity({
+        markup:
+        '<g class="rotatable"><g class="scalable"><polygon class="outer"/><polygon class="inner"/></g><text/><text class="label"/></g>' +
+        '<a class="remove-entity"><svg fill="#F7F7F7" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"> <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/> <path d="M0 0h24v24H0z" fill="none"/> </svg></a>',
+        attrs: {
+          text: {
+            text: '',
+            fill: '#ffffff',
+            'letter-spacing': 0,
+            style: { 'text-shadow': '1px 0 1px #333333' }
+          },
+          '.label': {
+            text: ''
+          },
+          '.outer, .inner, .attribute-background': {
+            fill: '#2AA8A0', stroke: '#2AA8A0', 'stroke-width': 2,
+            points: '100,0 100,60 0,60 0,0',
+            filter: { name: 'dropShadow',  args: { dx: 0.5, dy: 2, blur: 2, color: '#333333' }}
+          },
+          '.attribute': {
+            text: '',
+            'font-size': 12,
+            ref: '.outer', 'ref-x': .5, 'ref-y': 65,
+            'x-alignment': 'middle', 'y-alignment': 'middle'
+          },
+          '.attribute-background': {
+            fill: '#31d0c6', stroke: '#289E97',
+            points: '150,0 150,20 0,20 0,0',
+            ref: '.outer', 'ref-x': 0, 'ref-y': 60
+          }
         }
-        else {
-          addBundle(ui.item.data);
-        }
-      }
-    });
+      });
+    }
 
     function addType (type) {
       //  graph.get('cells').findWhere({ identifier: 'type:' + type_id }).remove();
 
-      var cell = entity_type.clone().translate(0, 200).attr('.label/text', type.label);
+      var cell = entity_type.clone().translate(0, 0).attr('.label/text', type.label);
       cell.set({identifier: 'type:' + type.id}, { silent: true });
       graph.addCell(cell);
 
@@ -147,7 +171,7 @@
     function addBundle (bundle) {
       //  graph.get('cells').findWhere({ identifier: 'bundle:' + bundle_id }).remove();
 
-      var cell = entity_bundle.clone().translate(0, 200).attr('.label/text', bundle.label);
+      var cell = entity_bundle.clone().translate(0, 0).attr('.label/text', bundle.label);
       cell.set({identifier: 'bundle:' + bundle.id}, { silent: true });
       var markup = cell.get('markup');
 
@@ -183,7 +207,7 @@
     }
 
     function createLink (source, target, label) {
-      var link = new erd.Line({
+      var link = new joint.shapes.erd.Line({
         source: source,
         target: target,
         attrs: {
