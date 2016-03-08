@@ -65,12 +65,11 @@ class EntityRelationshipDiagramController extends ControllerBase {
     $links = [];
 
     foreach ($entity_definitions as $definition) {
-      // Links are stored as an abstracted array gluing together different types
-      // and bundles.
-
       $entity = [
-        'label' => $definition->getLabel(),
         'id' => $definition->id(),
+        'type' => 'type',
+        'type_label' => 'Entity Type',
+        'label' => $definition->getLabel(),
         'provider' => $definition->getProvider(),
         'group' => $definition->getGroup(),
         'bundles' => [],
@@ -84,7 +83,10 @@ class EntityRelationshipDiagramController extends ControllerBase {
       foreach ($bundles as $bundle_id => $bundle_label) {
         $bundle = [
           'id' => $bundle_id,
+          'type' => 'bundle',
+          'type_label' => 'Entity Bundle',
           'label' => $bundle_label['label'],
+          'entity_type' => $definition->id(),
         ];
 
         if ($definition->isSubclassOf(FieldableEntityInterface::class)) {
@@ -102,9 +104,10 @@ class EntityRelationshipDiagramController extends ControllerBase {
               'is_multiple' => $field_storage_definition->isMultiple(),
             ];
             $field_settings = $field->getItemDefinition()->getSettings();
+            $types[$field_storage_definition->getType()] = $field_storage_definition->getType();
             if ($bundle['fields'][$field_name]['type'] == 'entity_reference') {
               $link = [
-                'label' => 'Entity Reference from "field ' . $field_name . '"',
+                'label' => 'Entity Reference from field "' . $field_name . '"',
                 'from' => 'bundle:' . $bundle_id,
                 'from_selector' => '.attribute-background-' . $field_name,
                 'targets' => ['type:' . $field_settings['target_type']],
@@ -118,6 +121,14 @@ class EntityRelationshipDiagramController extends ControllerBase {
 
               $links[] = $link;
             }
+            else if ($bundle['fields'][$field_name]['type'] == 'image') {
+              $links[] = [
+                'label' => 'Image Reference from field "' . $field_name . '"',
+                'from' => 'bundle:' . $bundle_id,
+                'from_selector' => '.attribute-background-' . $field_name,
+                'targets' => ['type:' . $field_settings['target_type']],
+              ];
+            }
           }
         }
 
@@ -128,7 +139,10 @@ class EntityRelationshipDiagramController extends ControllerBase {
     }
 
     return [
-      '#markup' => '<div id="erd-container"></div>',
+      '#markup' =>
+        '<div class="erd-actions"><i class="erd-search"><input type="text"/></i><i class="erd-label"></i><i class="erd-zoom"></i><i class="erd-unzoom"></i></div>' .
+        '<div class="erd-container"></div>',
+      '#allowed_tags' => ['input', 'div', 'i'],
       '#attached' => [
         'library' => ['erd/main'],
         'drupalSettings' => [

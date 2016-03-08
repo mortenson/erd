@@ -7,6 +7,8 @@ main:
       css/main.css: {}
   dependencies:
     - core/jquery
+    - core/jquery.ui.autocomplete
+    - core/jquery.once
     - core/drupal
     - erd/joint
     - erd/svg.pan.zoom
