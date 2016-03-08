@@ -41,6 +41,15 @@
 
     initAutocomplete();
 
+    $('.erd-label').click(function () {
+      addLabel();
+    });
+
+    $(this).on('click', '.remove-entity', function () {
+      var model_id = $(this).closest('[model-id]').attr('model-id');
+      graph.get('cells').get(model_id).remove();
+    });
+
     function initAutocomplete () {
       var source_types = [];
       var source_bundles = [];
@@ -70,11 +79,6 @@
           else {
             addBundle(ui.item.data);
           }
-
-          $('.remove-entity').click(function () {
-            var model_id = $(this).closest('[model-id]').attr('model-id');
-            graph.get('cells').get(model_id).remove();
-          });
         }
       });
     }
@@ -157,9 +161,12 @@
       });
     }
 
-    function addType (type) {
-      //  graph.get('cells').findWhere({ identifier: 'type:' + type_id }).remove();
+    function addLabel (text) {
+      var cell = entity_type.clone().translate(0, 0).attr('.label/text', text);
+      graph.addCell(cell);
+    }
 
+    function addType (type) {
       var cell = entity_type.clone().translate(0, 0).attr('.label/text', type.label);
       cell.set({identifier: 'type:' + type.id}, { silent: true });
       graph.addCell(cell);
@@ -169,8 +176,6 @@
     }
 
     function addBundle (bundle) {
-      //  graph.get('cells').findWhere({ identifier: 'bundle:' + bundle_id }).remove();
-
       var cell = entity_bundle.clone().translate(0, 0).attr('.label/text', bundle.label);
       cell.set({identifier: 'bundle:' + bundle.id}, { silent: true });
       var markup = cell.get('markup');
