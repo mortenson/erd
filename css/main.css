@@ -69,6 +69,10 @@
   background: url('../images/ic_zoom_out_black_24px.svg') 0 no-repeat;
 }
 
+.erd-line-style:before {
+  background: url('../images/ic_timeline_black_24px.svg') 0 no-repeat;
+}
+
 .erd-autocomplete-category {
   padding: 5px;
   font-weight: bold;
@@ -86,4 +90,32 @@
 
 .erd-container .remove-entity:hover svg {
   fill: white;
+}
+
+.erd-label .label {
+  cursor: text;
+}
+
+.erd-container .element.erd .port {
+  display: none;
+}
+
+.erd-container .element.erd:hover .port {
+  display: inherit;
+}
+
+.erd-container .port-left {
+  cursor: w-resize;
+}
+
+.erd-container .port-right {
+  cursor: e-resize;
+}
+
+.erd-container .port-top {
+  cursor: n-resize;
+}
+
+.erd-container .port-bottom {
+  cursor: s-resize;
 }

@@ -140,7 +140,7 @@ class EntityRelationshipDiagramController extends ControllerBase {
 
     return [
       '#markup' =>
-        '<div class="erd-actions"><i class="erd-search"><input type="text"/></i><i class="erd-label"></i><i class="erd-zoom"></i><i class="erd-unzoom"></i></div>' .
+        '<div class="erd-actions"><i title="Add Entity Type or Bundle" class="erd-search"><input type="text"/></i><i title="Add editable label" class="erd-label"></i><i title="Zoom in" class="erd-zoom"></i><i title="Zoom out" class="erd-unzoom"></i><i title="Change link styles" class="erd-line-style"></i></div>' .
         '<div class="erd-container"></div>',
       '#allowed_tags' => ['input', 'div', 'i'],
       '#attached' => [

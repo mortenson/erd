@@ -31,6 +31,10 @@
   });
 
   function erdInit (settings) {
+    var line_styles = [null, 'orthogonal', 'manhattan', 'metro'];
+    var line_style_index = 0;
+
+    var paper;
     var graph = createGraph(this);
 
     var entity_bundle = getDefaultJointEntity();
@@ -60,6 +64,35 @@
       if (text && text.length > 0) {
         graph.get('cells').get(model_id).attr('.label/text', text);
       }
+    });
+
+    $('.erd-line-style').click(function () {
+      if (line_style_index < line_styles.length - 1) {
+        ++line_style_index;
+      }
+      else {
+        line_style_index = 0;
+      }
+
+      // Change the line style for the default paper link.
+      if (line_styles[line_style_index]) {
+        paper.options.defaultLink.set('router', {name: line_styles[line_style_index]});
+      }
+      else {
+        paper.options.defaultLink.unset('router');
+      }
+
+      // Change line styles for all on-screen links.
+      graph.get('cells').each(function (cell) {
+        if (cell.get('type') == 'erd.Line' || cell.get('type') == 'link') {
+          if (line_styles[line_style_index]) {
+            cell.set('router', {name: line_styles[line_style_index]});
+          }
+          else {
+            cell.unset('router');
+          }
+        }
+      });
     });
 
     function initAutocomplete () {
@@ -100,14 +133,19 @@
 
       var $paper_el = $(element);
 
-      var paper = new joint.dia.Paper({
+      paper = new joint.dia.Paper({
         el: $paper_el,
         width: '100%',
         height: 650,
         gridSize: 1,
         model: graph,
         linkPinning: false,
-        linkConnectionPoint: joint.util.shapePerimeterConnectionPoint
+        linkConnectionPoint: joint.util.shapePerimeterConnectionPoint,
+        defaultLink: new joint.dia.Link({
+          attrs: {
+            '.marker-target': { fill: '#000000', stroke: '#000000', d: 'M 10 0 L 0 5 L 10 10 z' }
+          }
+        })
       });
 
       var panAndZoom = svgPanZoom($paper_el[0].childNodes[0],
@@ -141,8 +179,9 @@
     function getDefaultJointEntity () {
       return new joint.shapes.erd.Entity({
         markup:
-        '<g class="rotatable"><g class="scalable"><polygon class="outer"/><polygon class="inner"/></g><text/><text class="label"/></g>' +
-        '<a class="remove-entity"><svg fill="#F7F7F7" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"> <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/> <path d="M0 0h24v24H0z" fill="none"/> </svg></a>',
+        '<g class="rotatable"><g class="scalable"><polygon class="outer"/><polygon class="inner"/></g><text/><text class="label"/><circle class="port port-left"/><circle class="port port-right"/></g>' +
+        '<a class="remove-entity"><svg fill="#F7F7F7" height="20" width="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/> <path d="M0 0h24v24H0z" fill="none"/> </svg></a>',
+
         attrs: {
           text: {
             text: '',
@@ -157,6 +196,17 @@
             fill: '#2AA8A0', stroke: '#2AA8A0', 'stroke-width': 2,
             points: '100,0 100,60 0,60 0,0',
             filter: { name: 'dropShadow',  args: { dx: 0.5, dy: 2, blur: 2, color: '#333333' }}
+          },
+          '.port': {
+            magnet: 'active',
+            r: 7,
+            fill: '#F7F7F7',
+            'stroke-width': 1,
+            stroke: '#CCCCCC',
+            ref: '.outer', 'ref-x': 0, 'ref-y': .5
+          },
+          '.port-right': {
+            'ref-x': .9999, 'ref-y': .5
           },
           '.attribute': {
             text: '',
@@ -227,13 +277,19 @@
     }
 
     function createLink (source, target, label) {
-      var link = new joint.shapes.erd.Line({
+      var settings = {
         source: source,
         target: target,
         attrs: {
           '.marker-target': { fill: '#000000', stroke: '#000000', d: 'M 10 0 L 0 5 L 10 10 z' }
         }
-      });
+      };
+
+      if (line_styles[line_style_index]) {
+        settings.router = {name: line_styles[line_style_index]};
+      }
+
+      var link = new joint.shapes.erd.Line(settings);
 
       link.addTo(graph).set('labels', [{
         position: 0.5,
