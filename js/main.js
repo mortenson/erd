@@ -267,10 +267,9 @@
         }
 
         cell.set({markup: markup});
-
-        graph.addCell(cell);
-
       }
+
+      graph.addCell(cell);
 
       // Refresh all links on screen.
       refreshLinks();
