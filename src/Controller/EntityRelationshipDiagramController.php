@@ -94,16 +94,17 @@ class EntityRelationshipDiagramController extends ControllerBase {
           $fields = $this->entityFieldManager->getFieldDefinitions($definition->id(), $bundle_id);
           foreach ($fields as $field) {
             $field_storage_definition = $field->getFieldStorageDefinition();
+            $field_settings = $field->getItemDefinition()->getSettings();
+
             $field_name = $field_storage_definition->getName();
             $bundle['fields'][$field_name] = [
-              'name' => $field_name,
-              'label' => $field_storage_definition->getLabel(),
+              'id' => $field_name,
+              'label' => $field->getLabel(),
               'type' => $field_storage_definition->getType(),
               'description' => $field_storage_definition->getDescription(),
               'cardinality' => $field_storage_definition->getCardinality(),
               'is_multiple' => $field_storage_definition->isMultiple(),
             ];
-            $field_settings = $field->getItemDefinition()->getSettings();
             $types[$field_storage_definition->getType()] = $field_storage_definition->getType();
             if ($bundle['fields'][$field_name]['type'] == 'entity_reference') {
               $link = [
@@ -140,7 +141,16 @@ class EntityRelationshipDiagramController extends ControllerBase {
 
     return [
       '#markup' =>
-        '<div class="erd-actions"><i title="Add Entity Type or Bundle" class="erd-search"><input type="text"/></i><i title="Add editable label" class="erd-label"></i><i title="Zoom in" class="erd-zoom"></i><i title="Zoom out" class="erd-unzoom"></i><i title="Change link styles" class="erd-line-style"></i></div>' .
+        '<div class="erd-actions">' .
+          '<i title="Add Entity Type or Bundle" class="erd-search">' .
+          '  <input type="text"/>' .
+          '</i>' .
+          '<i title="Add editable label" class="erd-label"></i>' .
+        '<i title="Change link styles" class="erd-line-style"></i>' .
+        '<i title="Toggle machine names" class="erd-machine-name"></i>' .
+        '<i title="Zoom in" class="erd-zoom"></i>' .
+        '<i title="Zoom out" class="erd-unzoom"></i>' .
+        '</div>' .
         '<div class="erd-container"></div>',
       '#allowed_tags' => ['input', 'div', 'i'],
       '#attached' => [

@@ -49,23 +49,58 @@
 
     initAutocomplete();
 
+    // Add a generic Entity to the screen when the label button is clicked.
     $('.erd-label').click(function () {
       addLabel();
     });
 
-    $(this).on('click', '.remove-entity', function () {
-      var model_id = $(this).closest('[model-id]').attr('model-id');
-      graph.get('cells').get(model_id).remove();
-    });
-
+    // When a Label's text is clicked, show a prompt to change the text.
+    // Inline editing is preferable to this, but this was simple in the short
+    // term.
     $(this).on('click', '.erd-label .label', function () {
       var model_id = $(this).closest('[model-id]').attr('model-id');
-      var text = prompt('Please enter new label text');
+      var model = graph.get('cells').get(model_id);
+      var text = prompt('Please enter new label text', model.attr('.label/text'));
       if (text && text.length > 0) {
-        graph.get('cells').get(model_id).attr('.label/text', text);
+        model.attr('.label/text', text);
+
+        // Re-adjust erd.Entity widths.
+        reAdjustWidths();
       }
     });
 
+    // Show machine names or labels when this button is clicked.
+    $('.erd-machine-name').click(function() {
+      $(this).toggleClass('active');
+      var display = $(this).hasClass('active') ? 'id' : 'label';
+
+      graph.get('cells').each(function (cell) {
+        if (cell.has('erd.bundle')) {
+          var bundle = cell.get('erd.bundle');
+          cell.attr('.label/text', bundle[display]);
+
+          // Change the display of fields based on our current active state.
+          if (bundle.fields) {
+            var field, text_class;
+            for (var field_name in bundle.fields) {
+              field = bundle.fields[field_name];
+              text_class = 'attribute-' + field_name;
+
+              cell.attr('.' + text_class + '/text', field[display]);
+            }
+          }
+        }
+        else if (cell.has('erd.type')) {
+          var type = cell.get('erd.type');
+          cell.attr('.label/text', type[display]);
+        }
+      });
+
+      reAdjustWidths();
+    });
+
+    // When a user clicks the line-style button, cycle through our available
+    // link styles.
     $('.erd-line-style').click(function () {
       if (line_style_index < line_styles.length - 1) {
         ++line_style_index;
@@ -94,6 +129,48 @@
         }
       });
     });
+
+    // When the remove icon (trash can) is clicked on an Entity, remove it
+    // from the graph.
+    $(this).on('click', '.remove-entity', function () {
+      var model_id = $(this).closest('[model-id]').attr('model-id');
+      graph.get('cells').get(model_id).remove();
+    });
+
+    function reAdjustWidths () {
+      graph.get('cells').each(function (cell) {
+        if (cell.get('type') == 'erd.Entity') {
+          // Calculate our max string length.
+          var title_length = 0;
+          var attribute_length = 0;
+          var attrs = cell.get('attrs');
+          for (var i in attrs) {
+            if (attrs[i].text) {
+              var length = attrs[i].text.length;
+              if (i.indexOf('.attribute') === 0 && length > attribute_length) {
+                attribute_length = length;
+              }
+              else if (i == '.label' && length > title_length)  {
+                title_length = length;
+              }
+            }
+          }
+
+          // Determine our necessary width based on known font sizes.
+          title_length = title_length * 8;
+          attribute_length = attribute_length * 6;
+          var width = title_length > attribute_length ? title_length : attribute_length;
+          if (width < 150) {
+            width = 150;
+          }
+
+          // Resize our rectangles and re-position the right magnet link.
+          cell.attr('.outer, .inner, .attribute-background/points', width + ',0 ' + width + ',60 0,60 0,0');
+          cell.attr('.attribute-background/points',  width + ',0 ' + width + ',20 0,20 0,0');
+          cell.attr('.port-right/ref-x', width);
+        }
+      });
+    }
 
     function initAutocomplete () {
       var source_types = [];
@@ -124,6 +201,9 @@
           else {
             addBundle(ui.item.data);
           }
+
+          // Re-adjust erd.Entity widths.
+          reAdjustWidths();
         }
       });
     }
@@ -194,7 +274,7 @@
           },
           '.outer, .inner, .attribute-background': {
             fill: '#2AA8A0', stroke: '#2AA8A0', 'stroke-width': 2,
-            points: '100,0 100,60 0,60 0,0',
+            points: '150,0 150,60 0,60 0,0',
             filter: { name: 'dropShadow',  args: { dx: 0.5, dy: 2, blur: 2, color: '#333333' }}
           },
           '.port': {
@@ -206,7 +286,7 @@
             ref: '.outer', 'ref-x': 0, 'ref-y': .5
           },
           '.port-right': {
-            'ref-x': .9999, 'ref-y': .5
+            'ref-x': 150, 'ref-y': .5
           },
           '.attribute': {
             text: '',
@@ -226,22 +306,29 @@
     function addLabel () {
       var cell = entity_label.clone().translate(0, 0).attr('.label/text', 'Change me');
       var markup = cell.get('markup');
+
       markup = '<g class="erd-label">' + markup + '</g>';
       cell.set('markup', markup);
       graph.addCell(cell);
     }
 
     function addType (type) {
-      var cell = entity_type.clone().translate(0, 0).attr('.label/text', type.label);
+      var display = $('.erd-machine-name').hasClass('active') ? 'id' : 'label';
+      var cell = entity_type.clone().translate(0, 0).attr('.label/text', type[display]);
+
       cell.set({identifier: 'type:' + type.id}, { silent: true });
       graph.addCell(cell);
+
+      cell.set('erd.type', type);
 
       // Refresh all links on screen.
       refreshLinks();
     }
 
     function addBundle (bundle) {
-      var cell = entity_bundle.clone().translate(0, 0).attr('.label/text', bundle.label);
+      var display = $('.erd-machine-name').hasClass('active') ? 'id' : 'label';
+      var cell = entity_bundle.clone().translate(0, 0).attr('.label/text', bundle[display]);
+
       cell.set({identifier: 'bundle:' + bundle.id}, { silent: true });
       var markup = cell.get('markup');
 
@@ -259,9 +346,12 @@
           markup += '<polygon class="attribute-background ' + background_class + '"/>';
           markup += '<text class="attribute ' + text_class + '"/>';
 
-          cell.attr('.' + text_class + '/text', field.label);
+          cell.attr('.' + text_class + '/text', field[display]);
           cell.attr('.' + text_class + '/ref-y', text_y);
+          cell.attr('.' + text_class + '/ref-x', 5);
           cell.attr('.' + background_class + '/ref-y', background_y);
+
+          cell.set('erd.bundle', bundle);
 
           ++i;
         }

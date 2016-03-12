@@ -73,6 +73,15 @@
   background: url('../images/ic_timeline_black_24px.svg') 0 no-repeat;
 }
 
+.erd-machine-name:before {
+  background: url('../images/ic_face_black_24px.svg') 0 no-repeat;
+}
+
+.erd-machine-name.active:before {
+  background: url('../images/ic_android_black_24px.svg') 4px no-repeat;
+
+}
+
 .erd-autocomplete-category {
   padding: 5px;
   font-weight: bold;
