@@ -69,6 +69,39 @@
       }
     });
 
+    // Saves the SVG onscreen as an image.
+    $('.erd-save').click(function() {
+      var $container = $('.erd-container');
+      var svg_clone = paper.svg.cloneNode(true);
+      $(svg_clone).find('.port, .remove-entity, .link-tools, .marker-vertices, .marker-arrowheads, .connection-wrap').remove();
+      $(svg_clone).attr('width', $container.outerWidth());
+      $(svg_clone).attr('height', $container.outerHeight());
+
+      var serializer = new XMLSerializer();
+      var svg = serializer.serializeToString(svg_clone);
+
+      var data = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+
+      var image = new Image();
+      image.width = $container.outerWidth();
+      image.height = $container.outerHeight();
+      image.src = data;
+      image.onload = function() {
+        var canvas = document.createElement('canvas');
+        canvas.width = image.width;
+        canvas.height = image.height;
+        var context = canvas.getContext('2d');
+        context.drawImage(image, 0, 0);
+
+        var png = canvas.toDataURL('image/png');
+
+        var a = document.createElement('a');
+        a.href = png;
+        a.download = 'erd.png';
+        a.click();
+      };
+    });
+
     // Show machine names or labels when this button is clicked.
     $('.erd-machine-name').click(function() {
       $(this).toggleClass('active');
@@ -126,6 +159,9 @@
           else {
             cell.unset('router');
           }
+
+          // Hotfix for badly rendered metro/manhattan links.
+          cell.attr('.connection/fill', 'none');
         }
       });
     });
@@ -268,6 +304,9 @@
             fill: '#ffffff',
             'letter-spacing': 0,
             style: { 'text-shadow': '1px 0 1px #333333' }
+          },
+          '.connection': {
+            fill: 'none'
           },
           '.label': {
             text: ''

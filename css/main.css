@@ -79,7 +79,10 @@
 
 .erd-machine-name.active:before {
   background: url('../images/ic_android_black_24px.svg') 4px no-repeat;
+}
 
+.erd-save:before {
+  background: url('../images/ic_save_black_24px.svg') 0 no-repeat;
 }
 
 .erd-autocomplete-category {

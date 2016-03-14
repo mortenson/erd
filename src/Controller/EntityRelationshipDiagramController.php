@@ -148,6 +148,7 @@ class EntityRelationshipDiagramController extends ControllerBase {
           '<i title="Add editable label" class="erd-label"></i>' .
         '<i title="Change link styles" class="erd-line-style"></i>' .
         '<i title="Toggle machine names" class="erd-machine-name"></i>' .
+        '<i title="Save to image" class="erd-save"></i>' .
         '<i title="Zoom in" class="erd-zoom"></i>' .
         '<i title="Zoom out" class="erd-unzoom"></i>' .
         '</div>' .
