@@ -257,7 +257,8 @@
         linkConnectionPoint: joint.util.shapePerimeterConnectionPoint,
         defaultLink: new joint.dia.Link({
           attrs: {
-            '.marker-target': { fill: '#000000', stroke: '#000000', d: 'M 10 0 L 0 5 L 10 10 z' }
+            '.marker-target': { fill: '#000000', stroke: '#000000', d: 'M 10 0 L 0 5 L 10 10 z' },
+            '.connection': { fill: 'none' }
           }
         })
       });
@@ -407,7 +408,8 @@
         source: source,
         target: target,
         attrs: {
-          '.marker-target': { fill: '#000000', stroke: '#000000', d: 'M 10 0 L 0 5 L 10 10 z' }
+          '.marker-target': { fill: '#000000', stroke: '#000000', d: 'M 10 0 L 0 5 L 10 10 z' },
+          '.connection': { fill: 'none' }
         }
       };
 
