@@ -83,8 +83,6 @@
       var data = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
 
       var image = new Image();
-      image.width = $container.outerWidth();
-      image.height = $container.outerHeight();
       image.src = data;
       image.onload = function() {
         var canvas = document.createElement('canvas');
