@@ -60,9 +60,9 @@
     $(this).on('click', '.erd-label .label', function () {
       var model_id = $(this).closest('[model-id]').attr('model-id');
       var model = graph.get('cells').get(model_id);
-      var text = prompt('Please enter new label text', model.attr('.label/text'));
+      var text = prompt(Drupal.t('Please enter new label text'), model.attr('.label/text'));
       if (text && text.length > 0) {
-        model.attr('.label/text', text);
+        model.attr('.label/text', Drupal.checkPlain(text));
 
         // Re-adjust erd.Entity widths.
         reAdjustWidths();
@@ -108,7 +108,7 @@
       graph.get('cells').each(function (cell) {
         if (cell.has('erd.bundle')) {
           var bundle = cell.get('erd.bundle');
-          cell.attr('.label/text', bundle[display]);
+          cell.attr('.label/text', Drupal.checkPlain(bundle[display]));
 
           // Change the display of fields based on our current active state.
           if (bundle.fields) {
@@ -117,13 +117,13 @@
               field = bundle.fields[field_name];
               text_class = 'attribute-' + field_name;
 
-              cell.attr('.' + text_class + '/text', field[display]);
+              cell.attr('.' + text_class + '/text', Drupal.checkPlain(field[display]));
             }
           }
         }
         else if (cell.has('erd.type')) {
           var type = cell.get('erd.type');
-          cell.attr('.label/text', type[display]);
+          cell.attr('.label/text', Drupal.checkPlain(type[display]));
         }
       });
 
@@ -217,7 +217,7 @@
         });
         for (var j in settings.erd.entities[i].bundles) {
           source_bundles.push({
-            value: settings.erd.entities[i].bundles[j].label,
+            value: Drupal.checkPlain(settings.erd.entities[i].bundles[j].label),
             data: settings.erd.entities[i].bundles[j]
           });
         }
@@ -352,7 +352,7 @@
 
     function addType (type) {
       var display = $('.erd-machine-name').hasClass('active') ? 'id' : 'label';
-      var cell = entity_type.clone().translate(0, 0).attr('.label/text', type[display]);
+      var cell = entity_type.clone().translate(0, 0).attr('.label/text', Drupal.checkPlain(type[display]));
 
       cell.set({identifier: 'type:' + type.id}, { silent: true });
       graph.addCell(cell);
@@ -365,7 +365,7 @@
 
     function addBundle (bundle) {
       var display = $('.erd-machine-name').hasClass('active') ? 'id' : 'label';
-      var cell = entity_bundle.clone().translate(0, 0).attr('.label/text', bundle[display]);
+      var cell = entity_bundle.clone().translate(0, 0).attr('.label/text', Drupal.checkPlain(bundle[display]));
 
       cell.set({identifier: 'bundle:' + bundle.id}, { silent: true });
       var markup = cell.get('markup');
@@ -376,15 +376,15 @@
         var i = 0;
         for (var field_name in bundle.fields) {
           field = bundle.fields[field_name];
-          text_class = 'attribute-' + field_name;
-          background_class = 'attribute-background-' + field_name;
+          text_class = 'attribute-' + Drupal.checkPlain(field_name);
+          background_class = 'attribute-background-' + Drupal.checkPlain(field_name);
           background_y = cell.attr('.attribute-background/ref-y') + (i * 20);
           text_y = cell.attr('.attribute/ref-y') + (i * 20);
 
           markup += '<polygon class="attribute-background ' + background_class + '"/>';
           markup += '<text class="attribute ' + text_class + '"/>';
 
-          cell.attr('.' + text_class + '/text', field[display]);
+          cell.attr('.' + text_class + '/text', Drupal.checkPlain(field[display]));
           cell.attr('.' + text_class + '/ref-y', text_y);
           cell.attr('.' + text_class + '/ref-x', 5);
           cell.attr('.' + background_class + '/ref-y', background_y);
@@ -422,7 +422,11 @@
       link.addTo(graph).set('labels', [{
         position: 0.5,
         attrs: {
-          text: {text: label, fill: '#f6f6f6', 'font-family': 'sans-serif', 'font-size': 10, style: { 'text-shadow': '1px 0 1px #333333' }},
+          text: {
+            text: label, fill: '#f6f6f6',
+            'font-family': 'sans-serif', 'font-size': 10,
+            style: { 'text-shadow': '1px 0 1px #333333' }
+          },
           rect: { stroke: '#618eda', 'stroke-width': 20, rx: 5, ry: 5 } }
       }]);
     }

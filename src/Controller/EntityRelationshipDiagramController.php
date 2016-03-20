@@ -68,7 +68,7 @@ class EntityRelationshipDiagramController extends ControllerBase {
       $entity = [
         'id' => $definition->id(),
         'type' => 'type',
-        'type_label' => 'Entity Type',
+        'type_label' => t('Entity Type'),
         'label' => $definition->getLabel(),
         'provider' => $definition->getProvider(),
         'group' => $definition->getGroup(),
@@ -84,7 +84,7 @@ class EntityRelationshipDiagramController extends ControllerBase {
         $bundle = [
           'id' => $bundle_id,
           'type' => 'bundle',
-          'type_label' => 'Entity Bundle',
+          'type_label' => t('Entity Bundle'),
           'label' => $bundle_label['label'],
           'entity_type' => $definition->id(),
         ];
@@ -108,7 +108,9 @@ class EntityRelationshipDiagramController extends ControllerBase {
             $types[$field_storage_definition->getType()] = $field_storage_definition->getType();
             if ($bundle['fields'][$field_name]['type'] == 'entity_reference') {
               $link = [
-                'label' => 'Entity Reference from field "' . $field_name . '"',
+                'label' => t('Entity Reference from field "@field_name"', [
+                  '@field_name' => $field_name
+                ]),
                 'from' => 'bundle:' . $bundle_id,
                 'from_selector' => '.attribute-background-' . $field_name,
                 'targets' => ['type:' . $field_settings['target_type']],
@@ -124,7 +126,9 @@ class EntityRelationshipDiagramController extends ControllerBase {
             }
             else if ($bundle['fields'][$field_name]['type'] == 'image') {
               $links[] = [
-                'label' => 'Image Reference from field "' . $field_name . '"',
+                'label' => t('Image Reference from field "@field_name"', [
+                  '@field_name' => $field_name
+                ]),
                 'from' => 'bundle:' . $bundle_id,
                 'from_selector' => '.attribute-background-' . $field_name,
                 'targets' => ['type:' . $field_settings['target_type']],
